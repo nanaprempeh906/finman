@@ -77,6 +77,9 @@ class TransactionController extends Controller
      */
     public function create()
     {
+        $company = Auth::user()->company;
+        $accounts = $company->accounts()->active()->get();
+
         $categories = [
             'revenue' => 'Revenue',
             'sales' => 'Sales',
@@ -96,7 +99,7 @@ class TransactionController extends Controller
             'other' => 'Other'
         ];
 
-        return view('transactions.create', compact('categories'));
+        return view('transactions.create', compact('categories', 'accounts'));
     }
 
     /**
@@ -104,7 +107,10 @@ class TransactionController extends Controller
      */
     public function store(Request $request)
     {
+        $company = Auth::user()->company;
+
         $request->validate([
+            'account_id' => 'required|exists:accounts,id',
             'description' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01|max:999999999.99',
             'type' => 'required|in:credit,debit',
@@ -116,10 +122,12 @@ class TransactionController extends Controller
             'reference_number' => 'nullable|string|max:100',
         ]);
 
-        $company = Auth::user()->company;
+        // Ensure account belongs to user's company
+        $account = $company->accounts()->findOrFail($request->account_id);
 
         Transaction::create([
             'company_id' => $company->id,
+            'account_id' => $account->id,
             'user_id' => Auth::id(),
             'description' => $request->description,
             'amount' => $request->amount,
@@ -162,6 +170,9 @@ class TransactionController extends Controller
             abort(403, 'Unauthorized access to transaction.');
         }
 
+        $company = Auth::user()->company;
+        $accounts = $company->accounts()->active()->get();
+
         $categories = [
             'revenue' => 'Revenue',
             'sales' => 'Sales',
@@ -181,7 +192,7 @@ class TransactionController extends Controller
             'other' => 'Other'
         ];
 
-        return view('transactions.edit', compact('transaction', 'categories'));
+        return view('transactions.edit', compact('transaction', 'categories', 'accounts'));
     }
 
     /**
@@ -194,7 +205,10 @@ class TransactionController extends Controller
             abort(403, 'Unauthorized access to transaction.');
         }
 
+        $company = Auth::user()->company;
+
         $request->validate([
+            'account_id' => 'required|exists:accounts,id',
             'description' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0.01|max:999999999.99',
             'type' => 'required|in:credit,debit',
@@ -206,7 +220,11 @@ class TransactionController extends Controller
             'reference_number' => 'nullable|string|max:100',
         ]);
 
+        // Ensure account belongs to user's company
+        $account = $company->accounts()->findOrFail($request->account_id);
+
         $transaction->update([
+            'account_id' => $account->id,
             'description' => $request->description,
             'amount' => $request->amount,
             'type' => $request->type,

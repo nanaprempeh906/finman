@@ -12,6 +12,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'company_id',
+        'account_id',
         'user_id',
         'transaction_date',
         'amount',
@@ -44,29 +45,43 @@ class Transaction extends Model
         parent::boot();
 
         static::creating(function ($transaction) {
-            $company = $transaction->company;
-            $transaction->balance_before = $company->getCurrentBalance();
+            if ($transaction->account_id) {
+                $account = $transaction->account;
+                $transaction->balance_before = $account->calculateCurrentBalance();
 
-            // Calculate balance after transaction
-            if ($transaction->type === 'credit') {
-                $transaction->balance_after = $transaction->balance_before + $transaction->amount - $transaction->fee;
-            } else {
-                $transaction->balance_after = $transaction->balance_before - $transaction->amount - $transaction->fee;
+                // Calculate balance after transaction
+                if ($transaction->type === 'credit') {
+                    $transaction->balance_after = $transaction->balance_before + $transaction->amount - $transaction->fee;
+                } else {
+                    $transaction->balance_after = $transaction->balance_before - $transaction->amount - $transaction->fee;
+                }
             }
         });
 
         static::created(function ($transaction) {
-            // Update company's available balance after transaction is created
+            // Update account's current balance after transaction is created
+            if ($transaction->account_id) {
+                $transaction->account->updateCurrentBalance();
+            }
+            // Also update company balance for backward compatibility
             $transaction->company->updateAvailableBalance();
         });
 
         static::updated(function ($transaction) {
-            // Update company's available balance after transaction is updated
+            // Update account's current balance after transaction is updated
+            if ($transaction->account_id) {
+                $transaction->account->updateCurrentBalance();
+            }
+            // Also update company balance for backward compatibility
             $transaction->company->updateAvailableBalance();
         });
 
         static::deleted(function ($transaction) {
-            // Update company's available balance after transaction is deleted
+            // Update account's current balance after transaction is deleted
+            if ($transaction->account_id) {
+                $transaction->account->updateCurrentBalance();
+            }
+            // Also update company balance for backward compatibility
             $transaction->company->updateAvailableBalance();
         });
     }
@@ -77,6 +92,14 @@ class Transaction extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Relationship with account
+     */
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
     }
 
     /**
@@ -93,6 +116,14 @@ class Transaction extends Model
     public function scopeForCompany($query, $companyId)
     {
         return $query->where('company_id', $companyId);
+    }
+
+    /**
+     * Scope to filter transactions by account
+     */
+    public function scopeForAccount($query, $accountId)
+    {
+        return $query->where('account_id', $accountId);
     }
 
     /**
@@ -178,6 +209,9 @@ class Transaction extends Model
      */
     public function getFormattedAmountAttribute()
     {
+        if ($this->account) {
+            return $this->account->formatCurrency($this->amount);
+        }
         return '$' . number_format($this->amount, 2);
     }
 

@@ -62,6 +62,23 @@
                             <x-input-error :messages="$errors->get('type')" class="mt-2" />
                         </div>
 
+                        <!-- Account Selection -->
+                        <div>
+                            <x-input-label for="account_id" :value="__('Account')" />
+                            <select id="account_id" name="account_id" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                                <option value="">Select an account</option>
+                                @foreach($accounts as $account)
+                                    <option value="{{ $account->id }}"
+                                            data-currency="{{ $account->currency }}"
+                                            {{ old('account_id', $transaction->account_id) == $account->id ? 'selected' : '' }}>
+                                        {{ $account->name }} ({{ $account->formatAmount($account->current_balance) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('account_id')" class="mt-2" />
+                            <p class="mt-1 text-xs text-gray-500">Select the account for this transaction</p>
+                        </div>
+
                         <!-- Basic Information -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Description -->
@@ -78,7 +95,7 @@
                                 <x-input-label for="amount" :value="__('Amount')" />
                                 <div class="mt-1 relative rounded-md shadow-sm">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                        <span id="currency-symbol" class="text-gray-500 sm:text-sm">{{ $transaction->account ? $transaction->account->getCurrencySymbol() : '$' }}</span>
                                     </div>
                                     <x-text-input id="amount" name="amount" type="number" step="0.01" min="0.01"
                                                  class="pl-7 block w-full" :value="old('amount', $transaction->amount)" required
@@ -130,7 +147,7 @@
                                 <x-input-label for="fee" :value="__('Transaction Fee (Optional)')" />
                                 <div class="mt-1 relative rounded-md shadow-sm">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                        <span id="fee-currency-symbol" class="text-gray-500 sm:text-sm">{{ $transaction->account ? $transaction->account->getCurrencySymbol() : '$' }}</span>
                                     </div>
                                     <x-text-input id="fee" name="fee" type="number" step="0.01" min="0"
                                                  class="pl-7 block w-full" :value="old('fee', $transaction->fee)"
@@ -177,4 +194,31 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const accountSelect = document.getElementById('account_id');
+            const currencySymbol = document.getElementById('currency-symbol');
+            const feeCurrencySymbol = document.getElementById('fee-currency-symbol');
+
+            const currencySymbols = {
+                'USD': '$',
+                'GHS': '₵',
+                'EUR': '€',
+                'GBP': '£',
+                'NGN': '₦',
+                'ZAR': 'R',
+                'KES': 'KSh'
+            };
+
+            accountSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const currency = selectedOption.getAttribute('data-currency');
+                const symbol = currencySymbols[currency] || '$';
+
+                currencySymbol.textContent = symbol;
+                feeCurrencySymbol.textContent = symbol;
+            });
+        });
+    </script>
 </x-app-layout>

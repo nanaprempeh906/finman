@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\User;
+use App\Models\Account;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -31,6 +32,8 @@ class CompanyController extends Controller
             'phone' => 'nullable|string|max:20',
             'website' => 'nullable|url|max:255',
             'about' => 'nullable|string|max:1000',
+            'primary_currency' => 'required|string|in:USD,GHS,EUR,GBP,NGN,ZAR,KES',
+            'opening_balance' => 'nullable|numeric|min:0|max:999999999.99',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -52,6 +55,18 @@ class CompanyController extends Controller
             'subscription_status' => 'trial',
         ]);
 
+        // Create the default main account
+        $openingBalance = $request->opening_balance ?? 0;
+        Account::create([
+            'company_id' => $company->id,
+            'name' => 'Main Account',
+            'currency' => $request->primary_currency,
+            'opening_balance' => $openingBalance,
+            'current_balance' => $openingBalance,
+            'is_active' => true,
+            'description' => 'Default main account created during company setup',
+        ]);
+
         // Update the current user to belong to this company and make them admin
         $user = Auth::user();
         $user->update([
@@ -59,7 +74,7 @@ class CompanyController extends Controller
             'role' => 'admin',
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Company setup completed successfully! Welcome to your 30-day trial.');
+        return redirect()->route('dashboard')->with('success', 'Company setup completed successfully! Your main account has been created. Welcome to your 30-day trial.');
     }
 
     /**

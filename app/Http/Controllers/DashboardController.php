@@ -14,11 +14,17 @@ class DashboardController extends Controller
         $user = Auth::user();
         $company = $user->company;
 
-        // Get basic financial metrics
+        // Get basic financial metrics across all accounts
         $totalIncome = $company->getTotalIncome();
         $totalExpenses = $company->getTotalExpenses();
-        $currentBalance = $company->getCurrentBalance();
+        $totalFees = $company->getTotalFees();
+        $currentBalance = $company->getTotalCurrentBalance();
+        $availableBalance = $company->getTotalAvailableBalance();
         $profit = $company->getProfit();
+
+        // Get accounts summary
+        $accounts = $company->accounts()->active()->get();
+        $accountsByCurrency = $company->getAccountsByCurrency();
 
         // Get monthly data for charts
         $monthlyIncome = Transaction::forCompany($company->id)
@@ -43,7 +49,7 @@ class DashboardController extends Controller
 
         // Get recent transactions
         $recentTransactions = Transaction::forCompany($company->id)
-            ->with('user')
+            ->with(['user', 'account'])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -81,8 +87,12 @@ class DashboardController extends Controller
             'company',
             'totalIncome',
             'totalExpenses',
+            'totalFees',
             'currentBalance',
+            'availableBalance',
             'profit',
+            'accounts',
+            'accountsByCurrency',
             'monthlyIncome',
             'monthlyExpenses',
             'recentTransactions',
@@ -104,7 +114,7 @@ class DashboardController extends Controller
         // Basic financial metrics
         $totalIncome = $company->getTotalIncome();
         $totalExpenses = $company->getTotalExpenses();
-        $currentBalance = $company->getCurrentBalance();
+        $currentBalance = $company->getTotalCurrentBalance();
         $profit = $company->getProfit();
 
         // Monthly data for the last 12 months

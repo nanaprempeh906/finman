@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\AccountController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -27,6 +28,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\TenantMiddleware::cl
     Route::patch('/company', [CompanyController::class, 'update'])->name('company.update');
     Route::get('/company/opening-balance', [CompanyController::class, 'openingBalance'])->name('company.opening-balance');
     Route::post('/company/opening-balance', [CompanyController::class, 'storeOpeningBalance'])->name('company.opening-balance.store');
+
+    // Account management
+    Route::resource('accounts', AccountController::class);
+    Route::patch('/accounts/{account}/archive', [AccountController::class, 'archive'])->name('accounts.archive');
+    Route::patch('/accounts/{account}/restore', [AccountController::class, 'restore'])->name('accounts.restore');
 
     // Transaction management
     Route::resource('transactions', TransactionController::class);

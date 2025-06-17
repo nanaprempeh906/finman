@@ -16,6 +16,14 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
+                        {{ __('Accounts') }}
+                    </x-nav-link>
+
+                    <x-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
+                        {{ __('Transactions') }}
+                    </x-nav-link>
+
                     @if(Auth::user()->isAdmin())
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                             {{ __('Team') }}
@@ -85,6 +93,14 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('accounts.index')" :active="request()->routeIs('accounts.*')">
+                {{ __('Accounts') }}
+            </x-responsive-nav-link>
+
+            <x-responsive-nav-link :href="route('transactions.index')" :active="request()->routeIs('transactions.*')">
+                {{ __('Transactions') }}
             </x-responsive-nav-link>
 
             @if(Auth::user()->isAdmin())

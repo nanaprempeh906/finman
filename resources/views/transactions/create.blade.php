@@ -61,6 +61,28 @@
                             <x-input-error :messages="$errors->get('type')" class="mt-2" />
                         </div>
 
+                        <!-- Account Selection -->
+                        <div>
+                            <x-input-label for="account_id" :value="__('Select Account')" />
+                            <select id="account_id" name="account_id" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                                <option value="">Choose an account</option>
+                                @foreach($accounts as $account)
+                                    <option value="{{ $account->id }}"
+                                            data-currency="{{ $account->currency }}"
+                                            data-symbol="{{ $account->currency_symbol }}"
+                                            {{ old('account_id') == $account->id ? 'selected' : '' }}>
+                                        {{ $account->name }} ({{ $account->formatCurrency($account->calculateCurrentBalance()) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('account_id')" class="mt-2" />
+                            @if($accounts->isEmpty())
+                                <p class="mt-2 text-sm text-red-600">
+                                    No accounts available. <a href="{{ route('accounts.create') }}" class="underline">Create an account first</a>.
+                                </p>
+                            @endif
+                        </div>
+
                         <!-- Basic Information -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Description -->
@@ -77,7 +99,7 @@
                                 <x-input-label for="amount" :value="__('Amount')" />
                                 <div class="mt-1 relative rounded-md shadow-sm">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                        <span class="text-gray-500 sm:text-sm" id="currency-symbol">$</span>
                                     </div>
                                     <x-text-input id="amount" name="amount" type="number" step="0.01" min="0.01"
                                                  class="pl-7 block w-full" :value="old('amount')" required
@@ -129,7 +151,7 @@
                                 <x-input-label for="fee" :value="__('Transaction Fee (Optional)')" />
                                 <div class="mt-1 relative rounded-md shadow-sm">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                        <span class="text-gray-500 sm:text-sm" id="fee-currency-symbol">$</span>
                                     </div>
                                     <x-text-input id="fee" name="fee" type="number" step="0.01" min="0"
                                                  class="pl-7 block w-full" :value="old('fee', '0.00')"
@@ -178,6 +200,15 @@
     </div>
 
     <script>
+        // Update currency symbols when account is selected
+        document.getElementById('account_id').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const symbol = selectedOption.dataset.symbol || '$';
+
+            document.getElementById('currency-symbol').textContent = symbol;
+            document.getElementById('fee-currency-symbol').textContent = symbol;
+        });
+
         // Auto-focus amount field when transaction type is selected
         document.querySelectorAll('input[name="type"]').forEach(radio => {
             radio.addEventListener('change', function() {
@@ -196,6 +227,17 @@
                         e.target.value = parseFloat(value).toFixed(2);
                     }
                 }
+            }
+        });
+
+        // Initialize currency symbol on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const accountSelect = document.getElementById('account_id');
+            if (accountSelect.selectedIndex > 0) {
+                const selectedOption = accountSelect.options[accountSelect.selectedIndex];
+                const symbol = selectedOption.dataset.symbol || '$';
+                document.getElementById('currency-symbol').textContent = symbol;
+                document.getElementById('fee-currency-symbol').textContent = symbol;
             }
         });
     </script>

@@ -55,6 +55,30 @@
                             <x-input-error :messages="$errors->get('about')" class="mt-2" />
                         </div>
 
+                        <!-- Primary Currency -->
+                        <div class="mb-6">
+                            <x-input-label for="primary_currency" :value="__('Primary Currency')" />
+                            <select id="primary_currency" name="primary_currency" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="USD" {{ old('primary_currency', 'USD') == 'USD' ? 'selected' : '' }}>USD - US Dollar ($)</option>
+                                <option value="GHS" {{ old('primary_currency') == 'GHS' ? 'selected' : '' }}>GHS - Ghanaian Cedi (₵)</option>
+                                <option value="EUR" {{ old('primary_currency') == 'EUR' ? 'selected' : '' }}>EUR - Euro (€)</option>
+                                <option value="GBP" {{ old('primary_currency') == 'GBP' ? 'selected' : '' }}>GBP - British Pound (£)</option>
+                                <option value="NGN" {{ old('primary_currency') == 'NGN' ? 'selected' : '' }}>NGN - Nigerian Naira (₦)</option>
+                                <option value="ZAR" {{ old('primary_currency') == 'ZAR' ? 'selected' : '' }}>ZAR - South African Rand (R)</option>
+                                <option value="KES" {{ old('primary_currency') == 'KES' ? 'selected' : '' }}>KES - Kenyan Shilling (KSh)</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('primary_currency')" class="mt-2" />
+                            <p class="mt-1 text-sm text-gray-500">This will be the currency for your main account. You can add more accounts with different currencies later.</p>
+                        </div>
+
+                        <!-- Opening Balance -->
+                        <div class="mb-6">
+                            <x-input-label for="opening_balance" :value="__('Opening Balance')" />
+                            <x-text-input id="opening_balance" class="block mt-1 w-full" type="number" name="opening_balance" :value="old('opening_balance', '0.00')" step="0.01" min="0" />
+                            <x-input-error :messages="$errors->get('opening_balance')" class="mt-2" />
+                            <p class="mt-1 text-sm text-gray-500">The starting balance for your main account (optional - you can set this to 0 and add it later).</p>
+                        </div>
+
                         <!-- Logo Upload -->
                         <div class="mb-6">
                             <x-input-label for="logo" :value="__('Company Logo')" />

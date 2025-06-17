@@ -25,7 +25,6 @@ class Company extends Model
         'trial_ends_at',
         'subscription_status',
         'opening_balance',
-        'available_balance',
         'opening_balance_date',
     ];
 
@@ -34,7 +33,6 @@ class Company extends Model
         'is_active' => 'boolean',
         'trial_ends_at' => 'datetime',
         'opening_balance' => 'decimal:2',
-        'available_balance' => 'decimal:2',
         'opening_balance_date' => 'date',
     ];
 
@@ -58,6 +56,14 @@ class Company extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    /**
+     * Relationship with accounts
+     */
+    public function accounts()
+    {
+        return $this->hasMany(Account::class);
     }
 
     /**
@@ -95,64 +101,57 @@ class Company extends Model
     }
 
     /**
-     * Get total income for the company
+     * Get total income across all accounts
      */
     public function getTotalIncome()
     {
-        return $this->transactions()
-            ->where('type', 'credit')
-            ->where('status', 'completed')
-            ->sum('amount');
+        return $this->accounts()->get()->sum(function($account) {
+            return $account->getTotalIncome();
+        });
     }
 
     /**
-     * Get total expenses for the company
+     * Get total expenses across all accounts
      */
     public function getTotalExpenses()
     {
-        return $this->transactions()
-            ->where('type', 'debit')
-            ->where('status', 'completed')
-            ->sum('amount');
+        return $this->accounts()->get()->sum(function($account) {
+            return $account->getTotalExpenses();
+        });
     }
 
     /**
-     * Get total fees paid
+     * Get total fees across all accounts
      */
     public function getTotalFees()
     {
-        return $this->transactions()
-            ->where('status', 'completed')
-            ->sum('fee');
+        return $this->accounts()->get()->sum(function($account) {
+            return $account->getTotalFees();
+        });
     }
 
     /**
-     * Get current balance (opening balance + income - expenses - fees)
+     * Get total current balance across all accounts (converted to base currency)
      */
-    public function getCurrentBalance()
+    public function getTotalCurrentBalance()
     {
-        return $this->opening_balance + $this->getTotalIncome() - $this->getTotalExpenses() - $this->getTotalFees();
+        return $this->accounts()->get()->sum(function($account) {
+            return $account->calculateCurrentBalance();
+        });
     }
 
     /**
-     * Get available balance (current balance minus pending transactions)
+     * Get total available balance across all accounts
      */
-    public function getAvailableBalance()
+    public function getTotalAvailableBalance()
     {
-        $pendingDebits = $this->transactions()
-            ->where('type', 'debit')
-            ->where('status', 'pending')
-            ->sum('amount');
-
-        $pendingFees = $this->transactions()
-            ->where('status', 'pending')
-            ->sum('fee');
-
-        return $this->getCurrentBalance() - $pendingDebits - $pendingFees;
+        return $this->accounts()->get()->sum(function($account) {
+            return $account->getAvailableBalance();
+        });
     }
 
     /**
-     * Get profit (income - expenses, excluding opening balance)
+     * Get profit across all accounts
      */
     public function getProfit()
     {
@@ -160,24 +159,48 @@ class Company extends Model
     }
 
     /**
-     * Update the available balance in the database
+     * Get accounts grouped by currency
      */
-    public function updateAvailableBalance()
+    public function getAccountsByCurrency()
     {
-        $this->update([
-            'available_balance' => $this->getAvailableBalance()
-        ]);
+        return $this->accounts()->get()->groupBy('currency');
     }
 
     /**
-     * Set opening balance
+     * Get primary currency (most used currency)
      */
-    public function setOpeningBalance($amount, $date = null)
+    public function getPrimaryCurrency()
     {
-        $this->update([
-            'opening_balance' => $amount,
-            'opening_balance_date' => $date ?? now()->toDateString(),
-            'available_balance' => $this->getAvailableBalance()
-        ]);
+        $currencies = $this->accounts()->get()->countBy('currency');
+        return $currencies->keys()->first() ?? 'USD';
+    }
+
+    /**
+     * Format amount in primary currency
+     */
+    public function formatAmount($amount)
+    {
+        $currency = $this->getPrimaryCurrency();
+        $symbols = [
+            'USD' => '$',
+            'GHS' => '₵',
+            'EUR' => '€',
+            'GBP' => '£',
+            'NGN' => '₦',
+            'ZAR' => 'R',
+            'KES' => 'KSh',
+        ];
+
+        $symbol = $symbols[$currency] ?? $currency . ' ';
+        return $symbol . number_format($amount, 2);
+    }
+
+    /**
+     * Placeholder for backward compatibility - no longer updates database
+     */
+    public function updateAvailableBalance()
+    {
+        // No longer needed - balances are maintained at account level
+        return true;
     }
 }
