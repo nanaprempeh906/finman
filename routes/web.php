@@ -30,6 +30,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\TenantMiddleware::cl
     Route::resource('transactions', TransactionController::class);
     Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
 
+    // User management (admin only - enforced in controller)
+    Route::resource('users', \App\Http\Controllers\UserController::class);
+
     // Analytics routes
     Route::get('/analytics', [DashboardController::class, 'analytics'])->name('analytics');
     Route::get('/valuation', [DashboardController::class, 'valuation'])->name('valuation');
