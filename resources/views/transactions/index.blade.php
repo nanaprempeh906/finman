@@ -26,7 +26,23 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <!-- Financial Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Opening Balance</h3>
+                                <p class="text-2xl font-semibold text-blue-600">${{ number_format($openingBalance, 2) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center">
@@ -52,8 +68,8 @@
                                 </svg>
                             </div>
                             <div class="ml-4">
-                                <h3 class="text-sm font-medium text-gray-500">Total Expenses</h3>
-                                <p class="text-2xl font-semibold text-red-600">${{ number_format($totalExpenses, 2) }}</p>
+                                <h3 class="text-sm font-medium text-gray-500">Total Expenses + Fees</h3>
+                                <p class="text-2xl font-semibold text-red-600">${{ number_format($totalExpenses + $totalFees, 2) }}</p>
                             </div>
                         </div>
                     </div>
@@ -62,13 +78,13 @@
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center">
-                            <div class="p-2 bg-blue-100 rounded-lg">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="p-2 {{ $currentBalance >= 0 ? 'bg-green-100' : 'bg-red-100' }} rounded-lg">
+                                <svg class="w-6 h-6 {{ $currentBalance >= 0 ? 'text-green-600' : 'text-red-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16l3-1m0 0l-3-9"></path>
                                 </svg>
                             </div>
                             <div class="ml-4">
-                                <h3 class="text-sm font-medium text-gray-500">Net Balance</h3>
+                                <h3 class="text-sm font-medium text-gray-500">Current Balance</h3>
                                 <p class="text-2xl font-semibold {{ $currentBalance >= 0 ? 'text-green-600' : 'text-red-600' }}">
                                     ${{ number_format($currentBalance, 2) }}
                                 </p>
@@ -152,8 +168,11 @@
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fee</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
@@ -170,6 +189,15 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {{ ucfirst(str_replace('_', ' ', $transaction->category)) }}
                                             </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                @if($transaction->method)
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                        {{ ucfirst(str_replace('_', ' ', $transaction->method)) }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-gray-400">-</span>
+                                                @endif
+                                            </td>
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                                     {{ $transaction->type === 'credit' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
@@ -179,6 +207,22 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium
                                                 {{ $transaction->type === 'credit' ? 'text-green-600' : 'text-red-600' }}">
                                                 {{ $transaction->type === 'credit' ? '+' : '-' }}${{ number_format($transaction->amount, 2) }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600">
+                                                @if($transaction->fee > 0)
+                                                    -${{ number_format($transaction->fee, 2) }}
+                                                @else
+                                                    <span class="text-gray-400">$0.00</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium
+                                                {{ $transaction->type === 'credit' ? 'text-green-600' : 'text-red-600' }}">
+                                                @php
+                                                    $netAmount = $transaction->type === 'credit'
+                                                        ? $transaction->amount - $transaction->fee
+                                                        : -($transaction->amount + $transaction->fee);
+                                                @endphp
+                                                {{ $netAmount >= 0 ? '+' : '' }}${{ number_format(abs($netAmount), 2) }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {{ $transaction->user->name }}

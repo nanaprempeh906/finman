@@ -22,9 +22,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\TenantMiddleware::cl
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Company management
-    Route::get('/company/profile', [CompanyController::class, 'show'])->name('company.profile');
+    Route::get('/company/profile', [CompanyController::class, 'profile'])->name('company.profile');
     Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
     Route::patch('/company', [CompanyController::class, 'update'])->name('company.update');
+    Route::get('/company/opening-balance', [CompanyController::class, 'openingBalance'])->name('company.opening-balance');
+    Route::post('/company/opening-balance', [CompanyController::class, 'storeOpeningBalance'])->name('company.opening-balance.store');
 
     // Transaction management
     Route::resource('transactions', TransactionController::class);

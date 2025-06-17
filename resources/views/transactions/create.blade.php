@@ -94,6 +94,22 @@
                                 <x-input-error :messages="$errors->get('transaction_date')" class="mt-2" />
                             </div>
 
+                            <!-- Payment Method -->
+                            <div>
+                                <x-input-label for="method" :value="__('Payment Method')" />
+                                <select id="method" name="method" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                    <option value="">Select payment method</option>
+                                    <option value="cash" {{ old('method') === 'cash' ? 'selected' : '' }}>Cash</option>
+                                    <option value="bank_transfer" {{ old('method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                                    <option value="credit_card" {{ old('method') === 'credit_card' ? 'selected' : '' }}>Credit Card</option>
+                                    <option value="debit_card" {{ old('method') === 'debit_card' ? 'selected' : '' }}>Debit Card</option>
+                                    <option value="check" {{ old('method') === 'check' ? 'selected' : '' }}>Check</option>
+                                    <option value="digital_wallet" {{ old('method') === 'digital_wallet' ? 'selected' : '' }}>Digital Wallet</option>
+                                    <option value="other" {{ old('method') === 'other' ? 'selected' : '' }}>Other</option>
+                                </select>
+                                <x-input-error :messages="$errors->get('method')" class="mt-2" />
+                            </div>
+
                             <!-- Category -->
                             <div>
                                 <x-input-label for="category" :value="__('Category')" />
@@ -106,6 +122,21 @@
                                     @endforeach
                                 </select>
                                 <x-input-error :messages="$errors->get('category')" class="mt-2" />
+                            </div>
+
+                            <!-- Transaction Fee -->
+                            <div>
+                                <x-input-label for="fee" :value="__('Transaction Fee (Optional)')" />
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                    </div>
+                                    <x-text-input id="fee" name="fee" type="number" step="0.01" min="0"
+                                                 class="pl-7 block w-full" :value="old('fee', '0.00')"
+                                                 placeholder="0.00" />
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Processing fees, bank charges, etc.</p>
+                                <x-input-error :messages="$errors->get('fee')" class="mt-2" />
                             </div>
 
                             <!-- Reference Number -->

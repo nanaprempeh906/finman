@@ -24,12 +24,18 @@ class Company extends Model
         'is_active',
         'trial_ends_at',
         'subscription_status',
+        'opening_balance',
+        'available_balance',
+        'opening_balance_date',
     ];
 
     protected $casts = [
         'settings' => 'array',
         'is_active' => 'boolean',
         'trial_ends_at' => 'datetime',
+        'opening_balance' => 'decimal:2',
+        'available_balance' => 'decimal:2',
+        'opening_balance_date' => 'date',
     ];
 
     /**
@@ -111,18 +117,67 @@ class Company extends Model
     }
 
     /**
-     * Get current balance
+     * Get total fees paid
      */
-    public function getCurrentBalance()
+    public function getTotalFees()
     {
-        return $this->getTotalIncome() - $this->getTotalExpenses();
+        return $this->transactions()
+            ->where('status', 'completed')
+            ->sum('fee');
     }
 
     /**
-     * Get profit (income - expenses)
+     * Get current balance (opening balance + income - expenses - fees)
+     */
+    public function getCurrentBalance()
+    {
+        return $this->opening_balance + $this->getTotalIncome() - $this->getTotalExpenses() - $this->getTotalFees();
+    }
+
+    /**
+     * Get available balance (current balance minus pending transactions)
+     */
+    public function getAvailableBalance()
+    {
+        $pendingDebits = $this->transactions()
+            ->where('type', 'debit')
+            ->where('status', 'pending')
+            ->sum('amount');
+
+        $pendingFees = $this->transactions()
+            ->where('status', 'pending')
+            ->sum('fee');
+
+        return $this->getCurrentBalance() - $pendingDebits - $pendingFees;
+    }
+
+    /**
+     * Get profit (income - expenses, excluding opening balance)
      */
     public function getProfit()
     {
-        return $this->getCurrentBalance();
+        return $this->getTotalIncome() - $this->getTotalExpenses() - $this->getTotalFees();
+    }
+
+    /**
+     * Update the available balance in the database
+     */
+    public function updateAvailableBalance()
+    {
+        $this->update([
+            'available_balance' => $this->getAvailableBalance()
+        ]);
+    }
+
+    /**
+     * Set opening balance
+     */
+    public function setOpeningBalance($amount, $date = null)
+    {
+        $this->update([
+            'opening_balance' => $amount,
+            'opening_balance_date' => $date ?? now()->toDateString(),
+            'available_balance' => $this->getAvailableBalance()
+        ]);
     }
 }

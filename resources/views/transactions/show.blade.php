@@ -75,10 +75,38 @@
                                 </p>
                             </div>
 
+                            @if($transaction->fee > 0)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500">Transaction Fee</label>
+                                    <p class="mt-1 text-sm font-medium text-red-600">-${{ number_format($transaction->fee, 2) }}</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500">Net Amount</label>
+                                    <p class="mt-1 text-lg font-semibold {{ $transaction->type === 'credit' ? 'text-green-600' : 'text-red-600' }}">
+                                        @php
+                                            $netAmount = $transaction->type === 'credit'
+                                                ? $transaction->amount - $transaction->fee
+                                                : -($transaction->amount + $transaction->fee);
+                                        @endphp
+                                        {{ $netAmount >= 0 ? '+' : '' }}${{ number_format(abs($netAmount), 2) }}
+                                    </p>
+                                </div>
+                            @endif
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Category</label>
                                 <p class="mt-1 text-sm text-gray-900">{{ ucfirst(str_replace('_', ' ', $transaction->category)) }}</p>
                             </div>
+
+                            @if($transaction->method)
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-500">Payment Method</label>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mt-1">
+                                        {{ ucfirst(str_replace('_', ' ', $transaction->method)) }}
+                                    </span>
+                                </div>
+                            @endif
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-500">Transaction Date</label>

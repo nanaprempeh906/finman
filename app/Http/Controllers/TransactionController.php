@@ -49,7 +49,9 @@ class TransactionController extends Controller
         // Get summary statistics
         $totalIncome = Transaction::forCompany($company->id)->income()->completed()->sum('amount');
         $totalExpenses = Transaction::forCompany($company->id)->expenses()->completed()->sum('amount');
-        $currentBalance = $totalIncome - $totalExpenses;
+        $totalFees = Transaction::forCompany($company->id)->completed()->sum('fee');
+        $openingBalance = $company->opening_balance;
+        $currentBalance = $company->getCurrentBalance();
 
         // Get categories for filter dropdown
         $categories = Transaction::forCompany($company->id)
@@ -63,6 +65,8 @@ class TransactionController extends Controller
             'transactions',
             'totalIncome',
             'totalExpenses',
+            'totalFees',
+            'openingBalance',
             'currentBalance',
             'categories'
         ));
@@ -106,6 +110,8 @@ class TransactionController extends Controller
             'type' => 'required|in:credit,debit',
             'category' => 'required|string|max:100',
             'transaction_date' => 'required|date|before_or_equal:today',
+            'method' => 'nullable|string|in:cash,bank_transfer,credit_card,debit_card,check,digital_wallet,other',
+            'fee' => 'nullable|numeric|min:0|max:999999.99',
             'notes' => 'nullable|string|max:1000',
             'reference_number' => 'nullable|string|max:100',
         ]);
@@ -120,6 +126,8 @@ class TransactionController extends Controller
             'type' => $request->type,
             'category' => $request->category,
             'transaction_date' => $request->transaction_date,
+            'method' => $request->method,
+            'fee' => $request->fee ?? 0,
             'notes' => $request->notes,
             'reference_number' => $request->reference_number,
             'status' => 'completed', // Default to completed
@@ -192,6 +200,8 @@ class TransactionController extends Controller
             'type' => 'required|in:credit,debit',
             'category' => 'required|string|max:100',
             'transaction_date' => 'required|date|before_or_equal:today',
+            'method' => 'nullable|string|in:cash,bank_transfer,credit_card,debit_card,check,digital_wallet,other',
+            'fee' => 'nullable|numeric|min:0|max:999999.99',
             'notes' => 'nullable|string|max:1000',
             'reference_number' => 'nullable|string|max:100',
         ]);
@@ -202,6 +212,8 @@ class TransactionController extends Controller
             'type' => $request->type,
             'category' => $request->category,
             'transaction_date' => $request->transaction_date,
+            'method' => $request->method,
+            'fee' => $request->fee ?? 0,
             'notes' => $request->notes,
             'reference_number' => $request->reference_number,
         ]);

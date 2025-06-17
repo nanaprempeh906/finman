@@ -37,6 +37,41 @@ class Transaction extends Model
     ];
 
     /**
+     * Boot method to set up model observers
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($transaction) {
+            $company = $transaction->company;
+            $transaction->balance_before = $company->getCurrentBalance();
+
+            // Calculate balance after transaction
+            if ($transaction->type === 'credit') {
+                $transaction->balance_after = $transaction->balance_before + $transaction->amount - $transaction->fee;
+            } else {
+                $transaction->balance_after = $transaction->balance_before - $transaction->amount - $transaction->fee;
+            }
+        });
+
+        static::created(function ($transaction) {
+            // Update company's available balance after transaction is created
+            $transaction->company->updateAvailableBalance();
+        });
+
+        static::updated(function ($transaction) {
+            // Update company's available balance after transaction is updated
+            $transaction->company->updateAvailableBalance();
+        });
+
+        static::deleted(function ($transaction) {
+            // Update company's available balance after transaction is deleted
+            $transaction->company->updateAvailableBalance();
+        });
+    }
+
+    /**
      * Relationship with company
      */
     public function company()

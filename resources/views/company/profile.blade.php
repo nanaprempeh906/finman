@@ -193,6 +193,64 @@
                         </div>
                     </div>
 
+                    <!-- Financial Overview -->
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium text-gray-900">Financial Overview</h3>
+                                @if(Auth::user()->isAdmin())
+                                    <a href="{{ route('company.opening-balance') }}" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                        Set Opening Balance
+                                    </a>
+                                @endif
+                            </div>
+                            <div class="space-y-4">
+                                @if($company->opening_balance_date)
+                                    <div class="flex justify-between">
+                                        <span class="text-sm font-medium text-gray-500">Opening Balance</span>
+                                        <span class="text-sm text-blue-600 font-medium">${{ number_format($company->opening_balance, 2) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm font-medium text-gray-500">Opening Date</span>
+                                        <span class="text-sm text-gray-900">{{ $company->opening_balance_date->format('M d, Y') }}</span>
+                                    </div>
+                                @else
+                                    <div class="text-center py-4 border-2 border-dashed border-gray-300 rounded-lg">
+                                        <p class="text-sm text-gray-500 mb-2">No opening balance set</p>
+                                        @if(Auth::user()->isAdmin())
+                                            <a href="{{ route('company.opening-balance') }}" class="text-indigo-600 hover:text-indigo-500 text-sm font-medium">Set opening balance</a>
+                                        @endif
+                                    </div>
+                                @endif
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Total Income</span>
+                                    <span class="text-sm text-green-600 font-medium">${{ number_format($company->getTotalIncome(), 2) }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Total Expenses</span>
+                                    <span class="text-sm text-red-600 font-medium">${{ number_format($company->getTotalExpenses(), 2) }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Total Fees</span>
+                                    <span class="text-sm text-red-600 font-medium">${{ number_format($company->getTotalFees(), 2) }}</span>
+                                </div>
+                                <div class="border-t pt-4">
+                                    <div class="flex justify-between">
+                                        <span class="text-base font-medium text-gray-900">Current Balance</span>
+                                        <div class="text-2xl font-bold {{ $company->getCurrentBalance() >= 0 ? 'text-green-600' : 'text-red-600' }}">${{ number_format($company->getCurrentBalance(), 2) }}</div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-500">Available Balance</span>
+                                    <span class="text-sm {{ $company->getAvailableBalance() >= 0 ? 'text-green-600' : 'text-red-600' }} font-medium">${{ number_format($company->getAvailableBalance(), 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Company Statistics -->
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
@@ -207,8 +265,8 @@
                                     <div class="text-sm text-gray-500">Transactions</div>
                                 </div>
                                 <div class="text-center">
-                                    <div class="text-2xl font-bold text-blue-600">${{ number_format($company->getCurrentBalance(), 2) }}</div>
-                                    <div class="text-sm text-gray-500">Current Balance</div>
+                                    <div class="text-2xl font-bold text-orange-600">{{ $company->transactions()->where('status', 'pending')->count() }}</div>
+                                    <div class="text-sm text-gray-500">Pending Transactions</div>
                                 </div>
                             </div>
                         </div>

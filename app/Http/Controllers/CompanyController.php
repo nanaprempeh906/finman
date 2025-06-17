@@ -65,7 +65,7 @@ class CompanyController extends Controller
     /**
      * Display the company profile
      */
-    public function show()
+    public function profile()
     {
         $company = Auth::user()->company;
         return view('company.profile', compact('company'));
@@ -151,5 +151,36 @@ class CompanyController extends Controller
             'trial_ends_at' => $company->trial_ends_at,
             'is_on_trial' => $company->isOnTrial(),
         ]);
+    }
+
+    /**
+     * Show the opening balance form
+     */
+    public function openingBalance()
+    {
+        $company = Auth::user()->company;
+
+        return view('company.opening-balance', compact('company'));
+    }
+
+    /**
+     * Store the opening balance
+     */
+    public function storeOpeningBalance(Request $request)
+    {
+        $request->validate([
+            'opening_balance' => 'required|numeric|min:0|max:999999999.99',
+            'opening_balance_date' => 'required|date|before_or_equal:today',
+        ]);
+
+        $company = Auth::user()->company;
+
+        $company->setOpeningBalance(
+            $request->opening_balance,
+            $request->opening_balance_date
+        );
+
+        return redirect()->route('company.profile')
+            ->with('success', 'Opening balance has been set successfully!');
     }
 }
